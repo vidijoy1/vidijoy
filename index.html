@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VidiJoy - Personalized Video Greetings</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#101426;
+ color:white;
+}
+header{
+ text-align:center;
+ padding:35px 15px;
+ background:linear-gradient(135deg,#7028e4,#e83e9b);
+}
+header h1{font-size:38px;margin:0}
+header p{font-size:17px}
+.container{
+ max-width:650px;
+ margin:25px auto;
+ padding:20px;
+}
+.card{
+ background:#202943;
+ padding:25px;
+ border-radius:18px;
+}
+h2{text-align:center}
+label{
+ display:block;
+ margin-top:18px;
+ margin-bottom:8px;
+}
+input,textarea,select{
+ width:100%;
+ padding:14px;
+ border:0;
+ border-radius:9px;
+ font-size:16px;
+}
+button{
+ width:100%;
+ padding:16px;
+ margin-top:22px;
+ border:0;
+ border-radius:10px;
+ background:#e83e9b;
+ color:white;
+ font-size:18px;
+ font-weight:bold;
+}
+button:active{background:#7028e4}
+#preview{
+ display:flex;
+ flex-wrap:wrap;
+ gap:10px;
+ margin-top:15px;
+}
+#preview img{
+ width:90px;
+ height:90px;
+ object-fit:cover;
+ border-radius:10px;
+}
+footer{
+ text-align:center;
+ padding:25px;
+ color:#aaa;
+}
+</style>
+</head>
+<body>
+<header>
+<h1>VidiJoy ❤️</h1>
+<p>Create beautiful personalized video greetings</p>
+</header>
+<div class="container">
+<div class="card">
+<h2>Create your video greeting</h2>
+<label>Your name</label>
+<input id="name" placeholder="Enter your name">
+<label>Recipient's name</label>
+<input id="recipient" placeholder="Who is the greeting for?">
+<label>Your personal message</label>
+<textarea id="message" rows="3"
+placeholder="Write your special message..."></textarea>
+<label>Choose an occasion</label>
+<select id="occasion">
+<option>Birthday</option>
+<option>Anniversary</option>
+<option>Wedding</option>
+<option>Love</option>
+<option>Christmas</option>
+<option>Congratulations</option>
+</select>
+<label>Choose a video template</label>
+<select id="template">
+<option>Romantic</option>
+<option>Elegant</option>
+<option>Celebration</option>
+<option>Family</option>
+<option>Luxury</option>
+<option>Surprise</option>
+</select>
+<label>Upload your photos (3-5 recommended)</label>
+<input type="file" id="photos" accept="image/*" multiple>
+<div id="preview"></div>
+<button onclick="generate()">Create my greeting ❤️</button>
+<p id="result" style="text-align:center"></p>
+</div>
+</div>
+<footer>
+© 2026 VidiJoy - Make every moment special ❤️
+</footer>
+<script>
+const photos=document.getElementById("photos");
+
+photos.addEventListener("change",function(){
+ const preview=document.getElementById("preview");
+ preview.innerHTML="";
+ Array.from(this.files).forEach(file=>{
+  if(!file.type.startsWith("image/"))return;
+  const img=document.createElement("img");
+  img.src=URL.createObjectURL(file);
+  preview.appendChild(img);
+ });
+});
+
+function generate(){
+ const name=document.getElementById("name").value;
+ const recipient=document.getElementById("recipient").value;
+ const message=document.getElementById("message").value;
+ const files=photos.files;
+
+ if(!name||!recipient||!message){
+  alert("Please complete all fields!");
+  return;
+ }
+
+ if(files.length<1){
+  alert("Please upload at least one photo!");
+  return;
+ }
+
+ document.getElementById("result").innerText=
+ "Thank you! Your greeting details are ready. Video generation will be activated in the next development stage. ❤️";
+}
+</script>
+</body>
+
+</html>
