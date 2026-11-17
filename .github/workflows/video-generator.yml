@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate test video
+      - name: Generate and check video
         env:
           SHOTSTACK_API_KEY: ${{ secrets.SHOTSTACK_API_KEY }}
         run: |
@@ -32,11 +32,7 @@ jobs:
                         }
                       },
                       "start": 0,
-                      "length": 5,
-                      "transition": {
-                        "in": "fade",
-                        "out": "fade"
-                      }
+                      "length": 5
                     }
                   ]
                 }
@@ -52,9 +48,45 @@ jobs:
           }
           EOF
 
-          curl --fail-with-body --silent --show-error \
-            --request POST \
-            --url https://api.shotstack.io/edit/stage/render \
-            --header "Content-Type: application/json" \
-            --header "x-api-key: ${SHOTSTACK_API_KEY}" \
-            --data @video.json
+          response=$(curl --fail-with-body --silent --show-error \
+            -X POST \
+            https://api.shotstack.io/edit/stage/render \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $SHOTSTACK_API_KEY" \
+            -d @video.json)
+
+          echo "Render response received"
+
+          render_id=$(echo "$response" | jq -r '.response.id')
+
+          if [ -z "$render_id" ] || [ "$render_id" = "null" ]; then
+            echo "Could not get render ID"
+            exit 1
+          fi
+
+          echo "Render ID: $render_id"
+
+          for i in {1..12}; do
+            sleep 5
+
+            result=$(curl --fail-with-body --silent --show-error \
+              "https://api.shotstack.io/edit/stage/render/$render_id" \
+              -H "x-api-key: $SHOTSTACK_API_KEY")
+
+            status=$(echo "$result" | jq -r '.response.status')
+
+            echo "Render status: $status"
+
+            if [ "$status" = "done" ]; then
+              echo "VIDEO READY!"
+              echo "$result" | jq -r '.response.url'
+              exit 0
+            fi
+
+            if [ "$status" = "failed" ]; then
+              echo "$result" | jq -r '.response.error'
+              exit 1
+            fi
+          done
+
+          echo "Render is still processing. Run another status check later."
