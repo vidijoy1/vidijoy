@@ -1,3 +1,4 @@
+```yaml
 name: VidiJoy Video Test
 
 on:
@@ -32,7 +33,11 @@ jobs:
                         }
                       },
                       "start": 0,
-                      "length": 5
+                      "length": 5,
+                      "transition": {
+                        "in": "fade",
+                        "out": "fade"
+                      }
                     }
                   ]
                 }
@@ -48,45 +53,53 @@ jobs:
           }
           EOF
 
-          response=$(curl --fail-with-body --silent --show-error \
-            -X POST \
-            https://api.shotstack.io/edit/stage/render \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: $SHOTSTACK_API_KEY" \
-            -d @video.json)
+          echo "Sending video to Shotstack..."
 
-          echo "Render response received"
+          response=$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --url https://api.shotstack.io/edit/stage/render \
+            --header "Content-Type: application/json" \
+            --header "x-api-key: ${SHOTSTACK_API_KEY}" \
+            --data @video.json)
+
+          echo "$response"
 
           render_id=$(echo "$response" | jq -r '.response.id')
 
           if [ -z "$render_id" ] || [ "$render_id" = "null" ]; then
-            echo "Could not get render ID"
+            echo "ERROR: Could not get render ID."
             exit 1
           fi
 
           echo "Render ID: $render_id"
 
-          for i in {1..12}; do
+          for i in {1..24}; do
             sleep 5
 
             result=$(curl --fail-with-body --silent --show-error \
-              "https://api.shotstack.io/edit/stage/render/$render_id" \
-              -H "x-api-key: $SHOTSTACK_API_KEY")
+              --request GET \
+              --url "https://api.shotstack.io/edit/stage/render/$render_id" \
+              --header "x-api-key: ${SHOTSTACK_API_KEY}")
 
             status=$(echo "$result" | jq -r '.response.status')
 
-            echo "Render status: $status"
+            echo "Check $i - Render status: $status"
 
             if [ "$status" = "done" ]; then
               echo "VIDEO READY!"
+              echo "Video URL:"
               echo "$result" | jq -r '.response.url'
               exit 0
             fi
 
             if [ "$status" = "failed" ]; then
-              echo "$result" | jq -r '.response.error'
+              echo "VIDEO RENDER FAILED:"
+              echo "$result"
               exit 1
             fi
           done
 
-          echo "Render is still processing. Run another status check later."
+          echo "The video is still processing after 120 seconds."
+          echo "Render ID: $render_id"
+          echo "Check the render status again later."
+```
